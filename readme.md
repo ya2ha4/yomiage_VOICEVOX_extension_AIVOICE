@@ -1,10 +1,11 @@
-# yomiage_VOICEVOX(v20220611)
+# yomiage_VOICEVOX(v20220628)
 
 by かみみや
+forked by タクト
 
 ## 概要
 
-DiscordのチャットをVOICEVOXで読み上げるソフトです。
+DiscordのチャットをVOICEVOX・COEIROINK・LMROID・SHAREVOXで読み上げるソフトです。
 
 python読める＆python実行できる人向けです。
 
@@ -21,36 +22,42 @@ python読める＆python実行できる人向けです。
 
 ## ファイル構造(重要度順)
 
-1. **readme_for_python.md**
+1. **readme.md**
    - これです。使い方などかいているのでお読みください。
-2. **readme_for_exe.html**
+2. **readme.html**
    - exe版を利用する場合はこちらをお読みください
-2. **前バージョンからの移行方法.txt**
+3. **前バージョンからの移行方法.txt**
    - 以前のバージョンを使っていた場合はこれを参考にしてデータ（単語帳など）を引き継いでください
-2. **discordbot.exe**
+4. **discordbot.exe**
    - 実行ファイル
-3. **TOKEN.txt**
+5. **discordbot.py**
+   - コマンドプロンプトから実行する場合はこちらを使ってください
+6. **generator_setting.ini**
+   - ソフトウェア別に使用するかどうか、デフォルト話者とスタイルの設定ファイルです
+7. **TOKEN.txt**
    - BOTのアクセストークンを保存するファイル
-4. **command_list.html**
+8. **command_list.html**
    - 実装されているコマンドの確認
-5. **Synthax_setting.csv**
+9. **Synthax_setting.csv**
    - コマンドおよびコメントの先頭の文字を設定するファイル
-7. **python_code**
+10. **for_developer**
    - ソースファイル
-6. **data**
+11. **data**
    - 単語帳などが保存されるファイル。開く必要はあまりないです。
-7. **output_json_from_VOICEVOX.bat**
-   - VOICEVOXでjsonファイルを作成するbatファイル。
-8. **output_voice_from_VOICEVOX.bat**
-   - VOICEVOXで音声を作成するbatファイル。
-11. **tmp**
+12. **get_speakers_from_VOICEVOX.bat**
+   - VOICEVOXから話者の情報を取得するbatファイル。通常は編集する必要はありません。
+13. **output_json_from_VOICEVOX.bat**
+   - VOICEVOXでjsonファイルを作成するbatファイル。通常は編集する必要はありません。
+14. **output_voice_from_VOICEVOX.bat**
+   - VOICEVOXで音声を作成するbatファイル。通常は編集する必要はありません。
+15. **tmp**
     - 一時的に出力されるファイル（VOICEVOXで出力した音声ファイル等）が保存されます。開く必要は全くないです。
 
 ## 注意
 
 1. このソフトはWindows10上で使われることを想定しています。LinuxやMacで使う場合はbatファイルまわりと音声のopus変換まわりをいじれば多分なんとかなります。
 2. Pythonほぼ触ったことない + Discord bot作るの初めてで不慣れなところがあり一部コードが汚いかもしれないです。ごめんなさい。
-2. 以前のバージョンのデータを引き継ぎたい場合は**データの引き継ぎ方.txt**をご覧ください
+3. 以前のバージョンのデータを引き継ぎたい場合は**データの引き継ぎ方.txt**をご覧ください
 
 ## 導入が必要なソフト
 
@@ -188,7 +195,7 @@ $ pyinstaller for_developer/discordbot.spec --onefile
 ## その他
 
 1. ほかのBOTとコマンドが被ってしまっている場合はSynthax_setting.csvの"!", ">"を適当に変更してください。
-5. 機能の追加、バグの修正などしていくつもりなのでよろしくお願いします。更新したらdiscordで報告します。
+2. このBOTは改変版です。バグ報告や機能要望等は[改変者のTwitter](https://twitter.com/Taktstock_mov)にお願いします。
 
 
 ## 利用規約的なやつ
@@ -202,6 +209,9 @@ $ pyinstaller for_developer/discordbot.spec --onefile
 
 3. VOICEVOX及び各キャラの利用規約をよく読んでから使用してください。<br>
    [VOICEVOX HP](https://voicevox.hiroshiba.jp/) <br>
+   [COEIROINK HP](https://coeiroink.com/) <br>
+   [LMROID HP](https://lmroidsoftware.wixsite.com/nhoshio) <br>
+   [SHAREVOX HP](https://www.sharevox.app/) <br>
    [東北ずん子利用の手引き](https://zunko.jp/guideline.html)<br>
    
 4. 本ソフトウェアにより生じた損害・不利益について、製作者は一切の責任を負いません。
@@ -341,6 +351,21 @@ $ pyinstaller for_developer/discordbot.spec --onefile
   
   BOT待機時ステータス画面に'待機中をプレイ中'と表示されるようにした。
   
-- 
+- 20220628(かみみや)
+
+  botが入室しているボイスチャンネル名の表示のオンオフを切り替えられるようにした
+
+- 20220902(かみみや)
+
+  単語数制限が反映されない問題を解決
+  
+  ボイス（剣崎）を使用可にした
+  
+- 20220923(タクト)
+  話者を動的に取得するようにした
+
+  voice_list.csvの様式が変更になった(前バージョンのものは初回起動時に現在の様式に更新されます)
+
+  COEIROINK、LMROID、SHAREVOXに対応した
 
   

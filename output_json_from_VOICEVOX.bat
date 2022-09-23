@@ -1,2 +1,2 @@
 @echo off
-curl -s -X POST "localhost:50021/audio_query?text=%1&speaker=%2" > tmp/query.json
+curl -s -X POST "localhost:%1/audio_query?text=%2&speaker=%3" > tmp/query.json

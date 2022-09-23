@@ -32,8 +32,9 @@ async def on_ready():
     await room_info_tmp.reload()
     
     # statusの初期化
-    game = discord.Game("待機中")
-    await bot.change_presence(status=None, activity=game)
+    room_info_tmp.game = discord.Game("待機中")
+    if room_info_tmp.flag_valid_dict[command_inform_tmp_room]:
+        await bot.change_presence(status=None, activity=room_info_tmp.game)
 
 # メッセージ受信時に動作する処理
 @bot.event
