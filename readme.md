@@ -1,6 +1,7 @@
-# yomiage_VOICEVOX(v20220628)
+# yomiage_VOICEVOX(verT-20220923)
 
 by かみみや
+
 forked by タクト
 
 ## 概要
@@ -362,6 +363,7 @@ $ pyinstaller for_developer/discordbot.spec --onefile
   ボイス（剣崎）を使用可にした
   
 - 20220923(タクト)
+
   話者を動的に取得するようにした
 
   voice_list.csvの様式が変更になった(前バージョンのものは初回起動時に現在の様式に更新されます)
