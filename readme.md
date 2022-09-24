@@ -1,4 +1,4 @@
-# yomiage_VOICEVOX(verT-20220923)
+# yomiage_VOICEVOX(verT-20220924)
 
 by かみみや
 
@@ -370,4 +370,7 @@ $ pyinstaller for_developer/discordbot.spec --onefile
 
   COEIROINK、LMROID、SHAREVOXに対応した
 
-  
+- 20220924(タクト)
+
+  スタイル毎に話速・音高・抑揚・音量を持てるようにした
+

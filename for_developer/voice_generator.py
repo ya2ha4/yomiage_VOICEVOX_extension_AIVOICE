@@ -10,7 +10,7 @@ class AbstractVoiceGenerator(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def getSpeakers(self) -> str:
+    def getSpeakersStr(self) -> str:
         raise NotImplementedError
     
     @abstractmethod
@@ -27,6 +27,10 @@ class AbstractVoiceGenerator(metaclass=ABCMeta):
     
     @abstractmethod
     def getName(self) -> str:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def getSpeakersDict(self) -> dict:
         raise NotImplementedError
     
 class VoiceVoxVoiceGenerator(AbstractVoiceGenerator):
@@ -55,11 +59,11 @@ class VoiceVoxVoiceGenerator(AbstractVoiceGenerator):
                     self.speakers[speaker_name] = VoiceVoxVoiceSpeaker(speaker_name, style_dict)
 
             print("Jsonの解析完了")
-            print(self.getSpeakers())
+            print(self.getSpeakersStr())
         except Exception as e:
             raise e
             
-    def generate(self, character_name:str, style_name:str, query:str, speed:float):
+    def generate(self, character_name:str, style_name:str, query:str, parameter:dict):
         # コマンドの設定
         style_id_str = str(self.speakers[character_name].getStyleId(style_name))
         command1 = bat_json + ' ' + self.port + ' ' + query + ' ' + style_id_str
@@ -71,7 +75,10 @@ class VoiceVoxVoiceGenerator(AbstractVoiceGenerator):
         # jsonファイルのかきかえ
         with open(json_file, encoding="utf-8") as f:
             data_lines = f.read()
-        data_lines = data_lines.replace('"speedScale":1.0', '"speedScale":'+str(speed))
+            data_lines = data_lines.replace('"speedScale":1.0'     , '"speedScale":'     +str(parameter["speed"]))
+            data_lines = data_lines.replace('"pitchScale":0.0'     , '"pitchScale":'     +str(parameter["pitch"]))
+            data_lines = data_lines.replace('"intonationScale":1.0', '"intonationScale":'+str(parameter["intonation"]))
+            data_lines = data_lines.replace('"volumeScale":1.0'    , '"volumeScale":'    +str(parameter["volume"]))
         # 同じファイル名で保存
         with open(json_file, mode="w", encoding="utf-8") as f:
             f.write(data_lines)
@@ -79,11 +86,11 @@ class VoiceVoxVoiceGenerator(AbstractVoiceGenerator):
         # wavファイルの生成
         os.system(command2)
     
-    def getSpeakers(self) -> str:
+    def getSpeakersStr(self) -> str:
         ret = "【" + self.name + "】\n"
         
         for speaker_name in self.speakers:
-            ret += self.speakers[speaker_name].getStyles() + "\n"
+            ret += self.speakers[speaker_name].getStylesStr() + "\n"
         
         return ret
     
@@ -112,3 +119,6 @@ class VoiceVoxVoiceGenerator(AbstractVoiceGenerator):
             if speaker.hasStyleId(id):
                 return speaker
         return None
+    
+    def getSpeakersDict(self) -> dict:
+        return self.speakers

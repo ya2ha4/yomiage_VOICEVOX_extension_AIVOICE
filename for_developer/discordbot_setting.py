@@ -31,15 +31,16 @@ bat_voice = "output_voice_from_VOICEVOX.bat"
 bat_speakers = "get_speakers_from_VOICEVOX.bat"
 
 #各種ファイルへのパス(discordbot.pyからみた相対パス)
-voice_file = "tmp/tmp_voice.wav"      # VOICEVOX音声の保存先
-json_file = 'tmp/query.json'          # jsonファイルへのパス
-vlist_file = "data/voice_list.csv"    # ユーザー毎のボイスリスト 
+voice_file = "tmp/tmp_voice.wav"              # VOICEVOX音声の保存先
+json_file = 'tmp/query.json'                  # jsonファイルへのパス
+vlist_file = "data/voice_list.csv"            # ユーザー毎のボイスリスト 
 flist_file = "data/flag_list.csv"
-wlist_file = "data/word_list.csv"     # 単語帳
-clist_file = "data/command_list.txt"  # コマンドリスト
-SE_file = "SE_list.csv"               # SEリスト
-image_file = "image_list.csv"         # 画像リスト
-pie_data = 'pie_data.txt'             # パイ練り記録
+wlist_file = "data/word_list.csv"             # 単語帳
+clist_file = "data/command_list.txt"          # コマンドリスト
+SE_file = "SE_list.csv"                       # SEリスト
+image_file = "image_list.csv"                 # 画像リスト
+pie_data = 'pie_data.txt'                     # パイ練り記録
+style_setting_file = 'data/style_setting.csv' # スタイル別設定値ファイルのパス
 
 # 各種フラグのデフォルト値
 inform_tmp_room     = True     # 入退出の通知
@@ -66,7 +67,7 @@ command_read_name           = command_Synthax + 'read_name'
 command_number_of_people    = command_Synthax + 'number_of_people'
 command_auto_leave          = command_Synthax + 'auto_leave'
 command_word_count_limit    = command_Synthax + 'word_count_limit'
-command_chg_speed           = command_Synthax + 'chg_speed'
+command_chg_voice_setting   = command_Synthax + 'chg_voice_setting'
 command_show_setting        = command_Synthax + 'show_setting'
 command_reload              = command_Synthax + 'reload'
 command_stop                = command_Synthax + 'stop'
@@ -139,7 +140,10 @@ help_message = "```"+\
                        "Aは話者名、Bはスタイル名です。show_speakersコマンドからご確認ください。\n" +\
                        "Cはソフトウェア名です。オプションなので入れなくてもいいです。\n" +\
                        "複数のソフトウェアに、話者名とスタイル名が同一のキャラクターが実装されている場合にお使いください。\n" +\
-                       command_Synthax + "chg_speed: 音声再生スピード変更。!chg_speed Aで設定。Aは0.5から2.0までの実数。 \n\n" +\
+                       command_Synthax + "chg_voice_setting: スタイル毎の話速などの変更。!chg_speed A B C D \n" +\
+                       "Aは話者名、Bはスタイル名です。show_speakersコマンドからご確認ください。\n" +\
+                       "Cは speed pitch intonation volume のいずれか。それぞれ話速・音高・抑揚・音量。に対応。\n" +\
+                       "Dはspeedの場合0.5～2.0、pitchの場合-0.15～0.15、intonationとvolumeの場合0.0～2.0を入力してください。\n\n" +\
                        "■各種設定 \n" +\
                        command_Synthax + "inform_tmp_room: botが入室しているボイスチャンネル名の表示オンオフ。 \n" + \
                        command_Synthax + "inform_someone_come: 入退出通知のオンオフ。 \n" + \
@@ -158,6 +162,6 @@ version_info = comment_Synthax + 'ずんだもんは現在起動中なのだ！(
 flag_name_dict = {command_inform_someone_come: "入退出の通知", command_inform_tmp_room: "botが入室しているボイスチャットの表示",
                   command_time_signal: "時報", command_read_name: "名前読み上げ",
                   command_number_of_people: "在室人数チェック", command_auto_leave: "自動退出", 
-                  command_chg_speed: "音声のスピード", command_word_count_limit: "文字数制限"}  # フラグの名前
+                  command_word_count_limit: "文字数制限"}  # フラグの名前
 bool_name_dict = {True: "オン", False: "オフ"}  # フラグオンオフ通知用
 

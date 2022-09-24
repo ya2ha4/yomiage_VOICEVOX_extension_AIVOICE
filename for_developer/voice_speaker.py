@@ -6,11 +6,15 @@ class AbstractVoiceSpeaker(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def getStyles(self) -> str:
+    def getStylesStr(self) -> str:
         raise NotImplementedError
     
     @abstractmethod
     def getName(self) -> str:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def getStylesDict(self) -> dict:
         raise NotImplementedError
 
 class VoiceVoxVoiceSpeaker(AbstractVoiceSpeaker):
@@ -24,7 +28,7 @@ class VoiceVoxVoiceSpeaker(AbstractVoiceSpeaker):
         else:
             return False
     
-    def getStyles(self) -> str:
+    def getStylesStr(self) -> str:
         ret = "[" + self.name + "]:"
 
         for oneKey in list(self.styles.keys()):
@@ -50,3 +54,6 @@ class VoiceVoxVoiceSpeaker(AbstractVoiceSpeaker):
                 return k
         
         return None
+    
+    def getStylesDict(self) -> dict:
+        return self.styles

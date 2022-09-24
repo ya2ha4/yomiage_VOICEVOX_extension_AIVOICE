@@ -67,12 +67,13 @@ class room_information():
         # 各種リスト
         self.generators = {}  # 使用するソフトウェアとその情報
         self.voice_dict = {}  # 使用ボイスの管理
+        self.style_setting_dict = {} # スタイル別各種設定の管理
         self.word_dict = {}  # 単語帳の管理
         self.flag_valid_dict = {command_inform_someone_come: inform_someone_come, command_inform_tmp_room: inform_tmp_room,
                                 command_time_signal: time_signal,
                                 command_read_name: read_name, command_number_of_people: number_of_people,
                                 command_auto_leave: auto_leave, 
-                                command_chg_speed: 1.2, command_word_count_limit: word_count_limit}
+                                command_word_count_limit: word_count_limit}
         self.image_list = {}  # 画像と呼び出しコマンドの管理
         # キュー処理用
         self.speaking_queue = queue.Queue()
@@ -124,9 +125,11 @@ class room_information():
         try:
             if message_tmp.author.id in self.voice_dict.keys():
                 voice_data = self.voice_dict.get(message_tmp.author.id)
-                self.generators[voice_data[0]].generate(voice_data[1], voice_data[2], arg, self.flag_valid_dict[command_chg_speed])
+                parameter_dict = self.style_setting_dict[(voice_data[1], voice_data[2])]
+                self.generators[voice_data[0]].generate(voice_data[1], voice_data[2], arg, parameter_dict)
             else:
-                self.generators[self.default_generator].generate(self.default_speaker, self.default_style, arg, self.flag_valid_dict[command_chg_speed])
+                parameter_dict = self.style_setting_dict[(self.default_speaker, self.default_style)]
+                self.generators[self.default_generator].generate(self.default_speaker, self.default_style, arg, parameter_dict)
         except Exception as e:
             print(type(e))
             traceback.print_exc()
@@ -217,6 +220,34 @@ class room_information():
         if not any(self.generators):
             print("音声合成ソフトウェアの初期化に失敗しました。プログラムを終了します。")
             sys.exit(1)
+
+        # スタイルごとの情報の読み取り
+        # TODO そのうちスタイル別にオブジェクトを持たせ、ここでは管理しないようにする
+        with open(style_setting_file, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if not row or row[0] == 'name':
+                    continue
+                
+                parameter_dict = {}
+                parameter_dict['speed'] = float(row[2])
+                parameter_dict['pitch'] = float(row[3])
+                parameter_dict['intonation'] = float(row[4])
+                parameter_dict['volume'] = float(row[5])
+                self.style_setting_dict[(row[0], row[1])] = parameter_dict
+            
+        for generator in self.generators.values():
+            for speaker in generator.getSpeakersDict().values():
+                for style_name in speaker.getStylesDict().keys():
+                    if not (speaker.getName(), style_name) in self.style_setting_dict.keys():
+                        parameter_dict = {}
+                        parameter_dict['speed'] = 1.2
+                        parameter_dict['pitch'] = 0.0
+                        parameter_dict['intonation'] = 1.0
+                        parameter_dict['volume'] = 1.0
+                        self.style_setting_dict[(speaker.getName(), style_name)] = parameter_dict
+
+        self.writeStyleSettingDict()
 
         # voice_dict情報を読み込む
         with open(vlist_file, 'r', encoding='utf-8') as f:
@@ -325,7 +356,7 @@ class room_information():
         elif message_tmp.content == command_hello:
             await message_tmp.channel.send(version_info)
         
-        # TODO ボイスの変更
+        # ボイスの変更
         elif message_tmp.content.startswith(command_chg_my_voice):
             voice_tmp = message_tmp.content.split()
             if len(voice_tmp) == 3:
@@ -370,28 +401,60 @@ class room_information():
                 return
             else:  # 例外処理
                 await message_tmp.channel.send(comment_dict['message_err'])
-
-        # 読み上げスピードの設定
-        elif message_tmp.content.startswith(command_chg_speed):
+        
+        # スタイル別の読み上げ時の値の設定
+        elif message_tmp.content.startswith(command_chg_voice_setting):
             command_tmp = message_tmp.content.split()
             # 要素数エラー
-            if len(command_tmp) != 2:
-                await message_tmp.channel.send(comment_dict['message_err'])
-                return            
-            # 2つめの要素が数値でなければエラー
+            if len(command_tmp) != 5:
+                await message_tmp.channel.send(comment_Synthax + command_chg_voice_setting + " 話者名 スタイル名 変更するパラメータ 変更後の値 と入力してください")
+                await message_tmp.channel.send(comment_Synthax + "変更するパラメータには speed, pitch, intonation, volume が指定できます")
+                return
+            
+            # スタイル情報辞書に話者とスタイルの組み合わせが存在しない場合エラー
+            if not (command_tmp[1], command_tmp[2]) in self.style_setting_dict.keys():
+                await message_tmp.channel.send(comment_Synthax + "指定された話者とスタイルの組み合わせが存在しません")
+                return
+            
+            # 各種状態の変更
             try:
-                speed_tmp = '{:3}'.format(command_tmp[1])
-                if float(speed_tmp) < 0.5 or 2.0 < float(speed_tmp):
-                    await message_tmp.channel.send(comment_Synthax + '0.5から2.0の範囲で指定するのだ')
+                value_tmp = '{:3}'.format(command_tmp[4])
+                if command_tmp[3].lower() == 'speed':
+                    if float(value_tmp) < 0.5 or 2.0 < float(value_tmp):
+                        await message_tmp.channel.send(comment_Synthax + 'speedは0.5から2.0の範囲で指定してください')
+                    else:
+                        self.style_setting_dict[(command_tmp[1], command_tmp[2])]['speed'] = float(value_tmp)
+                        await message_tmp.channel.send(comment_Synthax + command_tmp[1] + " " + command_tmp[2] + "の読み上げスピードを" + command_tmp[4] + 'に設定しました')
+                        self.writeStyleSettingDict()
+                elif command_tmp[3].lower() == 'pitch':
+                    if float(value_tmp) < -0.15 or 0.15 < float(value_tmp):
+                        await message_tmp.channel.send(comment_Synthax + 'pitchは-0.15から0.15の範囲で指定してください')
+                    else:
+                        self.style_setting_dict[(command_tmp[1], command_tmp[2])]['pitch'] = float(value_tmp)
+                        await message_tmp.channel.send(comment_Synthax + command_tmp[1] + " " + command_tmp[2] + "の音高を" + command_tmp[4] + 'に設定しました')
+                        self.writeStyleSettingDict()
+                elif command_tmp[3].lower() == 'intonation':
+                    if float(value_tmp) < 0.0 or 2.0 < float(value_tmp):
+                        await message_tmp.channel.send(comment_Synthax + 'intonationは0.0から2.0の範囲で指定してください')
+                    else:
+                        self.style_setting_dict[(command_tmp[1], command_tmp[2])]['intonation'] = float(value_tmp)
+                        await message_tmp.channel.send(comment_Synthax + command_tmp[1] + " " + command_tmp[2] + "の抑揚を" + command_tmp[4] + 'に設定しました')
+                        self.writeStyleSettingDict()
+                elif command_tmp[3].lower() == 'volume':
+                    if float(value_tmp) < 0.0 or 2.0 < float(value_tmp):
+                        await message_tmp.channel.send(comment_Synthax + 'volumeは0.0から2.0の範囲で指定してください')
+                    else:
+                        self.style_setting_dict[(command_tmp[1], command_tmp[2])]['volume'] = float(value_tmp)
+                        await message_tmp.channel.send(comment_Synthax + command_tmp[1] + " " + command_tmp[2] + "の音量を" + command_tmp[4] + 'に設定しました')
+                        self.writeStyleSettingDict()
                 else:
-                    self.flag_valid_dict[command_chg_speed] = '{:3}'.format(command_tmp[1])
-                    await message_tmp.channel.send(comment_Synthax + "読み上げスピードを"+command_tmp[1]+'に設定したのだ')
-                    #設定の更新
-                    output_data(flist_file, self.flag_valid_dict)
+                    await message_tmp.channel.send(comment_Synthax + "変更するパラメータには speed, pitch, intonation, volume を指定してください")
+
             except ValueError:
-                await message_tmp.channel.send(comment_dict['message_err'])
+                await  message_tmp.channel.send(comment_dict['message_err'])
+
             return
-        
+
         # 文字数制限の設定
         elif message_tmp.content.startswith(command_word_count_limit):
             command_tmp = message_tmp.content.split()
@@ -435,7 +498,7 @@ class room_information():
         elif message_tmp.content == command_show_speakers:
             sentence = '```'
             for generator in self.generators.values():
-                sentence += generator.getSpeakers()
+                sentence += generator.getSpeakersStr()
             sentence += '```'
             await message_tmp.channel.send(sentence)
 
@@ -449,8 +512,17 @@ class room_information():
     
     def writeVoiceDict(self):
         with open(vlist_file, 'w', encoding='utf-8') as f:
-            writer = csv.writer(f)
+            writer = csv.writer(f, lineterminator='\n')
             for k, v in self.voice_dict.items():
                 tmpList = v.copy()
                 tmpList.insert(0, k)
                 writer.writerow(tmpList)
+    
+    def writeStyleSettingDict(self):
+        with open(style_setting_file, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f, lineterminator='\n')
+            writer.writerow(['name', 'style', 'speed', 'pitch', 'intonation', 'volume'])
+            for k, v in self.style_setting_dict.items():
+                tmp_list = list(k)
+                tmp_list += [str(v['speed']), str(v['pitch']), str(v['intonation']), str(v['volume'])]
+                writer.writerow(tmp_list)
