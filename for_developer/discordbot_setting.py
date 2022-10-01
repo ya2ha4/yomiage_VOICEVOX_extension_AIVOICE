@@ -33,14 +33,10 @@ bat_speakers = "get_speakers_from_VOICEVOX.bat"
 #各種ファイルへのパス(discordbot.pyからみた相対パス)
 voice_file = "tmp/tmp_voice.wav"              # VOICEVOX音声の保存先
 json_file = 'tmp/query.json'                  # jsonファイルへのパス
-vlist_file = "data/voice_list.csv"            # ユーザー毎のボイスリスト 
-flist_file = "data/flag_list.csv"
-wlist_file = "data/word_list.csv"             # 単語帳
 clist_file = "data/command_list.txt"          # コマンドリスト
 SE_file = "SE_list.csv"                       # SEリスト
 image_file = "image_list.csv"                 # 画像リスト
 pie_data = 'pie_data.txt'                     # パイ練り記録
-style_setting_file = 'data/style_setting.csv' # スタイル別設定値ファイルのパス
 
 # 各種フラグのデフォルト値
 inform_tmp_room     = True     # 入退出の通知

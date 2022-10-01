@@ -30,7 +30,7 @@ def revise_dict(dict, file):
     sort_dict(dict)
     # word_list.csvを更新する
     with open(file, 'w', encoding='utf-8') as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, lineterminator='\n')
         for k, v in dict.items():
             writer.writerow([k, v])
 
@@ -64,6 +64,11 @@ class room_information():
         self.voice_room_id = VOICE_ROOM_ID
         self.voice_room_name = VOICE_ROOM_NAME
         self.guild_id = GUILD_ID
+        # 各種ファイル
+        self.vlist_file = ""            # ユーザ毎のボイスリスト
+        self.flist_file = ""            # フラグリスト
+        self.wlist_file = ""            # 単語帳リスト
+        self.style_setting_file = ""    # スタイル別設定値ファイルのパス
         # 各種リスト
         self.generators = {}  # 使用するソフトウェアとその情報
         self.voice_dict = {}  # 使用ボイスの管理
@@ -195,9 +200,9 @@ class room_information():
             self.now_loading = False
 
     async def reload(self):        
-        # generator_setting.iniの読み込み
+        # setting.iniの読み込み
         ini = configparser.ConfigParser()
-        ini.read('./generator_setting.ini', 'UTF-8')
+        ini.read('./setting.ini', 'UTF-8')
         self.use_voicevox = True if ini.get('Using Setting', 'UseVOICEVOX') == 'True' else False
         self.use_coeiroink = True if ini.get('Using Setting', 'UseCOEIROINK') == 'True' else False
         self.use_lmroid = True if ini.get('Using Setting', 'UseLMROID') == 'True' else False
@@ -205,6 +210,10 @@ class room_information():
         self.default_generator = ini.get('Default Value Setting', 'DefaultGenerator')
         self.default_speaker = ini.get('Default Value Setting', 'DefaultSpeaker')
         self.default_style = ini.get('Default Value Setting', 'DefaultStyle')
+        self.vlist_file = ini.get('Data Location', 'VoiceList')
+        self.flist_file = ini.get('Data Location', 'FlagList')
+        self.wlist_file = ini.get('Data Location', 'WordList')
+        self.style_setting_file = ini.get('Data Location', 'StyleSetting')
 
         # ソフトウェア情報の読み込み
         self.generators = {}
@@ -223,7 +232,7 @@ class room_information():
 
         # スタイルごとの情報の読み取り
         # TODO そのうちスタイル別にオブジェクトを持たせ、ここでは管理しないようにする
-        with open(style_setting_file, 'r', encoding='utf-8') as f:
+        with open(self.style_setting_file, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             for row in reader:
                 if not row or row[0] == 'name':
@@ -250,7 +259,7 @@ class room_information():
         self.writeStyleSettingDict()
 
         # voice_dict情報を読み込む
-        with open(vlist_file, 'r', encoding='utf-8') as f:
+        with open(self.vlist_file, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             for row in reader:
                 if not row:
@@ -277,14 +286,14 @@ class room_information():
         self.writeVoiceDict()
 
         # word_dict情報を読み込む
-        with open(wlist_file, 'r', encoding='utf-8') as f:
+        with open(self.wlist_file, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             for row in reader:
                 if not row:
                     continue
                 self.word_dict[row[0]] = row[1]
         # flag_list情報を読み込む
-        with open(flist_file,'r', encoding='utf-8') as f:
+        with open(self.flist_file,'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             for row in reader:
                 if not row:
@@ -389,15 +398,15 @@ class room_information():
             if (len(wlist_tmp) == 4) and (wlist_tmp[1] == "add"):                # エラーチェック
                 self.word_dict[wlist_tmp[2]] = wlist_tmp[3]
                 await message_tmp.channel.send(comment_Synthax + wlist_tmp[2] + "を" + wlist_tmp[3] + "として追加しました")
-                revise_dict(self.word_dict, wlist_file)
+                revise_dict(self.word_dict, self.wlist_file)
                 return
             elif (len(wlist_tmp) == 3) and (wlist_tmp[1] == "delete"):           # エラーチェック
                 self.word_dict.pop(wlist_tmp[2])
                 await message_tmp.channel.send(comment_Synthax + wlist_tmp[2] + "を削除しました")
-                revise_dict(self.word_dict, wlist_file)
+                revise_dict(self.word_dict, self.wlist_file)
                 return
             elif (len(wlist_tmp) == 2) and (wlist_tmp[1] == "show"):             # エラーチェック
-                await message_tmp.channel.send(file=discord.File(wlist_file))
+                await message_tmp.channel.send(file=discord.File(self.wlist_file))
                 return
             else:  # 例外処理
                 await message_tmp.channel.send(comment_dict['message_err'])
@@ -466,7 +475,7 @@ class room_information():
             try:
                 self.flag_valid_dict[command_word_count_limit] = int(command_tmp[1])
                 await message_tmp.channel.send(comment_Synthax + "文字数制限を"+command_tmp[1]+'に設定したのだ')            #設定の更新
-                output_data(flist_file, self.flag_valid_dict)
+                output_data(self.flist_file, self.flag_valid_dict)
             except ValueError:
                 await message_tmp.channel.send(comment_dict['message_err'])
             return
@@ -476,7 +485,7 @@ class room_information():
             self.flag_valid_dict[message_tmp.content] = not self.flag_valid_dict[message_tmp.content]
             await message_tmp.channel.send(comment_Synthax + flag_name_dict[message_tmp.content] + "を" + bool_name_dict[self.flag_valid_dict[message_tmp.content]] + "にしたのだ")
             #設定の更新
-            output_data(flist_file, self.flag_valid_dict)
+            output_data(self.flist_file, self.flag_valid_dict)
             # inform_tmp_roomの設定を反映させる
             if self.flag_valid_dict[command_inform_tmp_room]:
                 await self.bot.change_presence(status=None, activity=self.game)
@@ -511,7 +520,7 @@ class room_information():
             await message_tmp.channel.send(comment_dict['message_err'])
     
     def writeVoiceDict(self):
-        with open(vlist_file, 'w', encoding='utf-8') as f:
+        with open(self.vlist_file, 'w', encoding='utf-8') as f:
             writer = csv.writer(f, lineterminator='\n')
             for k, v in self.voice_dict.items():
                 tmpList = v.copy()
@@ -519,7 +528,7 @@ class room_information():
                 writer.writerow(tmpList)
     
     def writeStyleSettingDict(self):
-        with open(style_setting_file, 'w', encoding='utf-8') as f:
+        with open(self.style_setting_file, 'w', encoding='utf-8') as f:
             writer = csv.writer(f, lineterminator='\n')
             writer.writerow(['name', 'style', 'speed', 'pitch', 'intonation', 'volume'])
             for k, v in self.style_setting_dict.items():
