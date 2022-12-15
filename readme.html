@@ -10,11 +10,11 @@
             overflow-wrap: break-word;
       }
       </style>
-      <title>yomiage_VOICEVOX(v20220611)</title>
+      <title>yomiage_VOICEVOX_verT(v20221225)</title>
 </head>
 <body>
       <div class="title">
-            <h1>yomiage_VOICEVOX_verT(20220924版)__Readme</h1>
+            <h1>yomiage_VOICEVOX_verT(20221225版)__Readme</h1>
       </div>
       <h2>概要</h2>
       <p>DiscordのチャットをVOICEVOXで読み上げるソフトです。<br>コマンド一覧は<a href="command_list.html">command_list.html</a>を参照してください。</p>
@@ -40,8 +40,36 @@
             <dd>実行ファイル</dd>
             <dt>discordbot.py</dt>
             <dd>コマンドプロンプトから実行する場合はこちらを使ってください</dd>
-            <dt>generator_setting.ini</dt>
-            <dd>ソフトウェア別に使用するかどうか、デフォルト話者とスタイルの設定ファイルです</dd>
+            <dt>setting.ini</dt>
+            <dd>使用するソフトウェアとポート番号の組、デフォルト話者とスタイルの設定、設定ファイルのロケーションが記載されたファイルです。<br>
+                <ol>
+                  <li>
+                        [Using Setting]セクション<br>
+                        使用するソフトウェアとポート番号の組が記載されています。<br>
+                        使用したいソフトがある場合は、先頭の # を削除してコメントアウトを解除してください。<br>
+                        逆に使用したくないソフトがある場合は、先頭に # を付加してコメントアウトしてください。<br>
+                        記載のないソフトウェアでも、WebAPIのポート番号が分かれば、そのソフトウェアとポート番号の組を入力すれば動きます。
+                  </li>
+                  <li>
+                        [Default Value Setting]セクション<br>
+                        デフォルトで利用する音声を設定します。
+                        <ul>
+                              <li>DefaultGenerator : デフォルト音声で使用するソフトウェア名です。</li>
+                              <li>DefaultSpeaker : デフォルト音声で使用する話者名です。</li>
+                              <li>DefaultStyle : デフォルト音声で使用するスタイル名です。</li>
+                        </ul>
+                  </li>
+                  <li>
+                        [Data Location]セクション<br>
+                        データファイルのロケーションを設定します。
+                        <ul>
+                              <li>VoiceList : ユーザーIDと利用する音声の組が記載されたファイルのロケーションです。</li>
+                              <li>FlagList : 各種フラグが記載されたファイルのロケーションです。</li>
+                              <li>WordList : 特定の文字列を特定の音声に置換する組み合わせが記載されたファイルのロケーションです。</li>
+                              <li>StyleSetting : スタイル別の速度・音高・抑揚・音量の設定が記載されたファイルのロケーションです。</li>
+                        </ul>
+                  </li>
+                </ol></dd>
             <dt>TOKEN.txt</dt>
             <dd>BOTのアクセストークンを保存するファイル</dd>
             <dt>command_list.html</dt>
@@ -159,6 +187,7 @@
                   <li><a href="https://www.sharevox.app/">SHAREVOX HP</a></li>
                   <li><a href="https://www.sharevox.app/terms">SHAREVOX利用規約</a></li>
                   <li><a href="https://www.sharevox.app/characters">SHAREVOX キャラクターページ</a></li>
+                  <li><a href="https://booth.pm/ja/items/4374126">ITVOICE 配布ページ</a>(利用規約に関する記述があります)</li>
             </ol>
             <li>本ソフトウェアにより生じた損害・不利益について、製作者は一切の責任を負いません。</li>
             <li>このバージョンは改変版です。改善して欲しい点などあれば<a href="https://twitter.com/Taktstock_mov">改変者のTwitter</a>で言ってください。</li>
@@ -283,6 +312,11 @@
                   設定ファイルの名称変更<br>
                   各種リストのロケーションを設定ファイル側で持つようにした（同一サーバーで複数のbotを運営する用）<br>
                   word_list.csvの更新時に余計な空行が発生しないようにした<br>
+            </dd>
+            <dt>verT-20221215</dt>
+            <dd>
+                  setting.iniの[Using Setting]セクションの記法を変更<br>
+                  readmeから現在のバージョンで実装されていないSE関連の文言を削除<br>
             </dd>
       </dl>
 

@@ -83,11 +83,6 @@ class room_information():
         # キュー処理用
         self.speaking_queue = queue.Queue()
         self.now_loading = False
-        # ソフトごとの使用設定
-        self.use_voicevox = False
-        self.use_coeiroink = False
-        self.use_lmroid = False
-        self.use_sharevox = False
         # デフォルト値
         self.default_generator = ""
         self.default_speaker = ""
@@ -202,11 +197,8 @@ class room_information():
     async def reload(self):        
         # setting.iniの読み込み
         ini = configparser.ConfigParser()
+        ini.optionxform = str
         ini.read('./setting.ini', 'UTF-8')
-        self.use_voicevox = True if ini.get('Using Setting', 'UseVOICEVOX') == 'True' else False
-        self.use_coeiroink = True if ini.get('Using Setting', 'UseCOEIROINK') == 'True' else False
-        self.use_lmroid = True if ini.get('Using Setting', 'UseLMROID') == 'True' else False
-        self.use_sharevox = True if ini.get('Using Setting', 'UseSHAREVOX') == 'True' else False
         self.default_generator = ini.get('Default Value Setting', 'DefaultGenerator')
         self.default_speaker = ini.get('Default Value Setting', 'DefaultSpeaker')
         self.default_style = ini.get('Default Value Setting', 'DefaultStyle')
@@ -217,14 +209,10 @@ class room_information():
 
         # ソフトウェア情報の読み込み
         self.generators = {}
-        if self.use_voicevox:
-            self.createVoiceVoxGenerator('VOICEVOX', '50021')
-        if self.use_coeiroink:
-            self.createVoiceVoxGenerator('COEIROINK', '50031')
-        if self.use_lmroid:
-            self.createVoiceVoxGenerator('LMROID', '50073')
-        if self.use_sharevox:
-            self.createVoiceVoxGenerator('SHAREVOX', '50025')
+        for k in ini['Using Setting']:
+            print(k)
+            print(ini.get('Using Setting', k))
+            self.createVoiceVoxGenerator(k, ini.get('Using Setting', k))
         
         if not any(self.generators):
             print("音声合成ソフトウェアの初期化に失敗しました。プログラムを終了します。")
