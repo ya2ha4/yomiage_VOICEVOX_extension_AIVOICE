@@ -6,7 +6,7 @@ forked by タクト
 
 ## 概要
 
-DiscordのチャットをVOICEVOX・COEIROINK・LMROID・SHAREVOXで読み上げるソフトです。
+DiscordのチャットをVOICEVOXおよび同等の仕様のWebAPIを利用して動作する音声合成ソフトウェアで読み上げるソフトです。
 
 python読める＆python実行できる人向けです。
 
@@ -24,7 +24,7 @@ python読める＆python実行できる人向けです。
 ## ファイル構造(重要度順)
 
 1. **readme.md**
-   - これです。使い方などかいているのでお読みください。
+   - これです。使い方など書いているのでお読みください。
 2. **readme.html**
    - exe版を利用する場合はこちらをお読みください
 3. **前バージョンからの移行方法.txt**
@@ -34,7 +34,7 @@ python読める＆python実行できる人向けです。
 5. **discordbot.py**
    - コマンドプロンプトから実行する場合はこちらを使ってください
 6. **setting.ini**
-   - 各種設定ファイルです。今のところ「ソフトウェア別に使用するかどうか」「デフォルト話者とスタイルの設定」「データファイルの場所」を設定できます。
+   - 各種設定ファイルです。今のところ「使用するソフトウェアの名称と使用するポート番号の組」「デフォルト話者とスタイルの設定」「データファイルの場所」を設定できます。
 7. **TOKEN.txt**
    - BOTのアクセストークンを保存するファイル
 8. **command_list.html**
@@ -52,7 +52,7 @@ python読める＆python実行できる人向けです。
 14. **output_voice_from_VOICEVOX.bat**
    - VOICEVOXで音声を作成するbatファイル。通常は編集する必要はありません。
 15. **tmp**
-    - 一時的に出力されるファイル（VOICEVOXで出力した音声ファイル等）が保存されます。開く必要は全くないです。
+   - 一時的に出力されるファイル（VOICEVOXで出力した音声ファイル等）が保存されます。開く必要は全くないです。
 
 ## 注意
 
@@ -146,7 +146,7 @@ $ pip install pyinstaller
 以下のコマンドを打ち込んでexe化する(pyinstallerが使えない場合は環境変数の編集からPath[例）C:\Users\xxx\AppData\Roaming\Python\Python38\Scripts]を追加する）
 
 ```bash
-$ pyinstaller for_developer/discordbot.spec --onefile
+$ pyinstaller for_developer/discordbot.spec
 ```
 
 成功したら**dist**というファイルが生成され、そのなかにdiscordbot.exeがある。
@@ -177,21 +177,7 @@ $ pyinstaller for_developer/discordbot.spec --onefile
 
 ## 前バージョンからの引き継ぎ方法
 
-前バージョンのyomiage_VOICEVOXのうち
-
-1. data
-2. SE
-3. SE_list.csv
-
-の3つをこのファイルに上書き保存する。
-
-## SEの追加方法
-
-例)dededeに音声を追加したい場合
-
-1. wavファイルを用意する
-2. dedede.wavという名前にして,SEフォルダの中に入れる
-3. SE_list.csvをひらき（メモ帳で開ける）, 一番下にdededeを追加する。
+新バージョンのdataフォルダに、旧バージョンのdataフォルダの内容を上書きしてください。
 
 ## その他
 
@@ -213,6 +199,7 @@ $ pyinstaller for_developer/discordbot.spec --onefile
    [COEIROINK HP](https://coeiroink.com/) <br>
    [LMROID HP](https://lmroidsoftware.wixsite.com/nhoshio) <br>
    [SHAREVOX HP](https://www.sharevox.app/) <br>
+   [ITVOICE HP](https://booth.pm/ja/items/4374126) <br>
    [東北ずん子利用の手引き](https://zunko.jp/guideline.html)<br>
    
 4. 本ソフトウェアにより生じた損害・不利益について、製作者は一切の責任を負いません。
@@ -220,8 +207,7 @@ $ pyinstaller for_developer/discordbot.spec --onefile
 5. 改善して欲しい点などあれば言ってください。
    ある程度リクエストは受け付けたいと思っていますが、製作者に技術がないのであまり期待しないでください。
 
-6. 何かあればTwitterかDiscordまで<br>
-   Twitter: @Kamimiya_yade<br>Discord: https://discord.gg/CMrDukD8DZ
+6. 何かあれば[改変者のTwitter](https://twitter.com/Taktstock_mov)まで<br>
 
 ## 更新履歴
 
@@ -381,3 +367,9 @@ $ pyinstaller for_developer/discordbot.spec --onefile
   各種リストのロケーションを設定ファイル側で持つようにした（同一サーバーで複数のbotを運営する用）
 
   word_list.csvの更新時に余計な空行が発生しないようにした
+
+- 20221215(タクト)
+
+  setting.iniの[Using Setting]セクションの記法を変更
+
+  readmeから現在のバージョンで実装されていないSE関連の文言を削除
