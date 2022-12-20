@@ -96,10 +96,15 @@ async def on_message(message):
             if ';' in room_info_tmp.word_dict[key]:
                 tmp_message = tmp_message.replace(key, room_info_tmp.word_dict[key])
         
-        # メンションを含む場合表示名に変換する
+        # 個人へのメンションを含む場合表示名に変換する
         Members = re.findall(r'<@([0-9]*)>', tmp_message)
         for member in Members:
             tmp_message = re.sub(r'<@'+member+'>', ';'+guild.get_member(int(member)).display_name+';', tmp_message)
+        
+        # ロールへのメンションを含む場合ロール名に変換する
+        Roles = re.findall(r'<@&([0-9]*)>', tmp_message)
+        for role in Roles:
+            tmp_message = re.sub(r'<@&'+role+'>', ';'+guild.get_role(int(role)).name+';', tmp_message)
             
         # 部屋名に変換する
         Rooms = re.findall(r'<#([0-9]*)>', tmp_message)
