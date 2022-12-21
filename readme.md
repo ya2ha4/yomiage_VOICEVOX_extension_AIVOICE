@@ -99,7 +99,7 @@ python読める＆python実行できる人向けです。
    4. するとBuild-A-Botのところになんか出てくる。そのTOKENのところにあるCopyを押すとBotのTOKENがコピーできる。**のちに必要となるので保存しておく。**
    5. **そのしたのPUBLIC BOT, REQUIRES OAUTH2 CODE GRANTをオフ、Presence Intent, Server Members Intent, MESSAGE CONTENT INTENTという項目をオンにする。(灰色がオフ、青色がオン）**
    6. 左のメニューのOAuth2→URL Generatorを開きます。 SCOPESでbotにチェックを入れます。
-   7. BOT PERMISSIONSという項目が出てくると思うのでRead Messages/ViewChannels, Send Messages, Connect, Speakにチェックを入れてください。
+   7. BOT PERMISSIONSという項目が出てくると思うのでRead Messages/ViewChannels, Send Messages, Connect, Speak, Use Slash Commands(スラッシュコマンドを利用する場合)にチェックを入れてください。
    8. 一番下にあるGENERATED URLにあるリンクを開くとサーバー招待画面が出てくるので、追加したいサーバーを選択して認証します 。
 
 3. アクセストークンを設定する（すでに設定していたら省略）
@@ -181,7 +181,7 @@ $ pyinstaller for_developer/discordbot.spec
 
 ## その他
 
-1. ほかのBOTとコマンドが被ってしまっている場合はSynthax_setting.csvの"!", ">"を適当に変更してください。
+1. ほかのBOTとコマンドが被ってしまっている場合はSynthax_setting.csvの"!", ">", "voice-bot1"を適当に変更してください。
 2. このBOTは改変版です。バグ報告や機能要望等は[改変者のTwitter](https://twitter.com/Taktstock_mov)にお願いします。
 
 
@@ -373,3 +373,11 @@ $ pyinstaller for_developer/discordbot.spec
   setting.iniの[Using Setting]セクションの記法を変更
 
   readmeから現在のバージョンで実装されていないSE関連の文言を削除
+
+- 20221221(タクト)
+  
+  一部を除いてスラッシュコマンドに対応させた
+
+  ロールに対するメンションが正しく読み上げられない不具合を修正
+
+  ユーザーIDに紐づいているボイススタイルが利用できない時、直前に生成したwavファイルが再生されてしまう不具合を修正し、デフォルトスタイルで読み上げるように変更

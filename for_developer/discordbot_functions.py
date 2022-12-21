@@ -130,6 +130,10 @@ class room_information():
             else:
                 parameter_dict = self.style_setting_dict[(self.default_speaker, self.default_style)]
                 self.generators[self.default_generator].generate(self.default_speaker, self.default_style, arg, parameter_dict)
+        except KeyError:
+            # ユーザーが指定しているスタイルが辞書に存在しない場合
+            parameter_dict = self.style_setting_dict[(self.default_speaker, self.default_style)]
+            self.generators[self.default_generator].generate(self.default_speaker, self.default_style, arg, parameter_dict)
         except Exception as e:
             print(type(e))
             traceback.print_exc()
@@ -314,88 +318,41 @@ class room_information():
         # ボイスチャンネルに接続
         if message_tmp.content == command_join:
             # message_tmpの送信者がいるボイスチャンネルに接続
-            await message_tmp.author.voice.channel.connect()
-            # 接続先のチャンネル情報を記録
-            self.text_room_name = str(message_tmp.channel)
-            self.text_room_id = int(message_tmp.channel.id)
-            self.voice_room_name = str(message_tmp.author.voice.channel)
-            self.voice_room_id = int(message_tmp.author.voice.channel.id)
-            self.guild_id = message_tmp.guild.id
-            # statusの更新
-            self.game = discord.Game(self.voice_room_name)
-            if self.flag_valid_dict[command_inform_tmp_room]:
-                await self.bot.change_presence(status=None, activity=self.game)
-            # 接続に成功したことの報告
-            print(self.voice_room_name + "に接続しました")
+            await self.execute_join(message_tmp.author.voice.channel, message_tmp.channel, message_tmp.guild.id)
             await message_tmp.channel.send(comment_dict['message_join'])
 
         # ボイスチャンネルから切断
         elif message_tmp.content == command_leave:
-            # statusの初期化
-            self.game = discord.Game("待機中")
-            if self.flag_valid_dict[command_inform_tmp_room]:
-                await self.bot.change_presence(status=None, activity=self.game)
-            # ボイスチャンネルから切断
-            await message_tmp.guild.voice_client.disconnect()
-            # 切断に成功したことの報告
-            print(self.voice_room_name + "から切断しました")
+            await self.execute_leave(message_tmp.guild.voice_client)
             await message_tmp.channel.send(comment_dict['message_leave'])
-            # チャンネル情報を初期化
-            self.text_room_name = ''
-            self.text_room_id = 0
-            self.voice_room_name = ''
-            self.voice_room_id = 0
-            self.guild_id = 0
             
         # helpコマンド
         elif message_tmp.content == command_help:
-            await message_tmp.channel.send(help_message)
+            await message_tmp.channel.send(self.execute_help)
+        
+        # helloコマンド
         elif message_tmp.content == command_hello:
-            await message_tmp.channel.send(version_info)
+            await message_tmp.channel.send(self.execute_hello)
         
         # ボイスの変更
         elif message_tmp.content.startswith(command_chg_my_voice):
             voice_tmp = message_tmp.content.split()
             if len(voice_tmp) == 3:
-                # generatorsを前から順番に探す
-                for generator in self.generators.values():
-                    if generator.hasStyle(voice_tmp[1], voice_tmp[2]):
-                        self.voice_dict[message_tmp.author.id] = [generator.getName(), voice_tmp[1], voice_tmp[2]]
-                        await message_tmp.channel.send(comment_dict['message_chg_voice'])
-                        self.writeVoiceDict()
-                        return
-                await message_tmp.channel.send(comment_dict['message_not_actualized'] + "\n" + comment_dict['message_prompt_command'])
+                await message_tmp.channel.send(await self.execute_chg_my_voice(message_tmp.author.id, voice_tmp[1], voice_tmp[2]))
             elif len(voice_tmp) == 4:
-                # ソフト名を指定して対応するボイスを探す
-                if voice_tmp[3] in self.generators.keys():
-                    generator = self.generators[voice_tmp[3]]
-                    if generator.hasStyle(voice_tmp[1], voice_tmp[2]):
-                        self.voice_dict[message_tmp.author.id] = [generator.getName(), voice_tmp[1], voice_tmp[2]]
-                        await message_tmp.channel.send(comment_dict['message_chg_voice'])
-                        self.writeVoiceDict()
-                    else:
-                        await message_tmp.channel.send(comment_dict['message_not_actualized_in_software'] + "\n" + comment_dict['message_prompt_command'])
-                else:
-                    await message_tmp.channel.send(comment_dict['message_invalid_software'] + "\n" + comment_dict['message_prompt_command'])
+                await message_tmp.channel.send(await self.execute_chg_my_voice_with_software(message_tmp.author.id, voice_tmp[1], voice_tmp[2], voice_tmp[3]))
             else:
                 await message_tmp.channel.send(comment_dict['message_err'])
 
-        # ワードリストの追加
+        # ワードリスト関連
         elif message_tmp.content.startswith(command_wlist):
             wlist_tmp = message_tmp.content.split()
             if (len(wlist_tmp) == 4) and (wlist_tmp[1] == "add"):                # エラーチェック
-                self.word_dict[wlist_tmp[2]] = wlist_tmp[3]
-                await message_tmp.channel.send(comment_Synthax + wlist_tmp[2] + "を" + wlist_tmp[3] + "として追加しました")
-                revise_dict(self.word_dict, self.wlist_file)
-                return
+                await message_tmp.channel.send(await self.execute_wlist_add(wlist_tmp[2], wlist_tmp[3]))
             elif (len(wlist_tmp) == 3) and (wlist_tmp[1] == "delete"):           # エラーチェック
-                self.word_dict.pop(wlist_tmp[2])
-                await message_tmp.channel.send(comment_Synthax + wlist_tmp[2] + "を削除しました")
-                revise_dict(self.word_dict, self.wlist_file)
-                return
+                await message_tmp.channel.send(await self.execute_wlist_delete(wlist_tmp[2]))
             elif (len(wlist_tmp) == 2) and (wlist_tmp[1] == "show"):             # エラーチェック
-                await message_tmp.channel.send(file=discord.File(self.wlist_file))
-                return
+                await message_tmp.channel.send(file=await self.execute_wlist_show())
             else:  # 例外処理
                 await message_tmp.channel.send(comment_dict['message_err'])
         
@@ -407,50 +364,9 @@ class room_information():
                 await message_tmp.channel.send(comment_Synthax + command_chg_voice_setting + " 話者名 スタイル名 変更するパラメータ 変更後の値 と入力してください")
                 await message_tmp.channel.send(comment_Synthax + "変更するパラメータには speed, pitch, intonation, volume が指定できます")
                 return
-            
-            # スタイル情報辞書に話者とスタイルの組み合わせが存在しない場合エラー
-            if not (command_tmp[1], command_tmp[2]) in self.style_setting_dict.keys():
-                await message_tmp.channel.send(comment_Synthax + "指定された話者とスタイルの組み合わせが存在しません")
+            else:
+                await message_tmp.channel.send(await self.execute_chg_voice_setting(command_tmp[1], command_tmp[2], command_tmp[3], command_tmp[4]))
                 return
-            
-            # 各種状態の変更
-            try:
-                value_tmp = '{:3}'.format(command_tmp[4])
-                if command_tmp[3].lower() == 'speed':
-                    if float(value_tmp) < 0.5 or 2.0 < float(value_tmp):
-                        await message_tmp.channel.send(comment_Synthax + 'speedは0.5から2.0の範囲で指定してください')
-                    else:
-                        self.style_setting_dict[(command_tmp[1], command_tmp[2])]['speed'] = float(value_tmp)
-                        await message_tmp.channel.send(comment_Synthax + command_tmp[1] + " " + command_tmp[2] + "の読み上げスピードを" + command_tmp[4] + 'に設定しました')
-                        self.writeStyleSettingDict()
-                elif command_tmp[3].lower() == 'pitch':
-                    if float(value_tmp) < -0.15 or 0.15 < float(value_tmp):
-                        await message_tmp.channel.send(comment_Synthax + 'pitchは-0.15から0.15の範囲で指定してください')
-                    else:
-                        self.style_setting_dict[(command_tmp[1], command_tmp[2])]['pitch'] = float(value_tmp)
-                        await message_tmp.channel.send(comment_Synthax + command_tmp[1] + " " + command_tmp[2] + "の音高を" + command_tmp[4] + 'に設定しました')
-                        self.writeStyleSettingDict()
-                elif command_tmp[3].lower() == 'intonation':
-                    if float(value_tmp) < 0.0 or 2.0 < float(value_tmp):
-                        await message_tmp.channel.send(comment_Synthax + 'intonationは0.0から2.0の範囲で指定してください')
-                    else:
-                        self.style_setting_dict[(command_tmp[1], command_tmp[2])]['intonation'] = float(value_tmp)
-                        await message_tmp.channel.send(comment_Synthax + command_tmp[1] + " " + command_tmp[2] + "の抑揚を" + command_tmp[4] + 'に設定しました')
-                        self.writeStyleSettingDict()
-                elif command_tmp[3].lower() == 'volume':
-                    if float(value_tmp) < 0.0 or 2.0 < float(value_tmp):
-                        await message_tmp.channel.send(comment_Synthax + 'volumeは0.0から2.0の範囲で指定してください')
-                    else:
-                        self.style_setting_dict[(command_tmp[1], command_tmp[2])]['volume'] = float(value_tmp)
-                        await message_tmp.channel.send(comment_Synthax + command_tmp[1] + " " + command_tmp[2] + "の音量を" + command_tmp[4] + 'に設定しました')
-                        self.writeStyleSettingDict()
-                else:
-                    await message_tmp.channel.send(comment_Synthax + "変更するパラメータには speed, pitch, intonation, volume を指定してください")
-
-            except ValueError:
-                await  message_tmp.channel.send(comment_dict['message_err'])
-
-            return
 
         # 文字数制限の設定
         elif message_tmp.content.startswith(command_word_count_limit):
@@ -493,11 +409,7 @@ class room_information():
 
         # 話者リストの表示
         elif message_tmp.content == command_show_speakers:
-            sentence = '```'
-            for generator in self.generators.values():
-                sentence += generator.getSpeakersStr()
-            sentence += '```'
-            await message_tmp.channel.send(sentence)
+            await message_tmp.channel.send(await self.execute_show_speakers())
 
         # 情報の再読み込み
         elif message_tmp.content == command_reload:
@@ -523,3 +435,136 @@ class room_information():
                 tmp_list = list(k)
                 tmp_list += [str(v['speed']), str(v['pitch']), str(v['intonation']), str(v['volume'])]
                 writer.writerow(tmp_list)
+    
+    async def execute_join(self, voiceChannel:discord.VoiceChannel, textChannel:discord.TextChannel, guild_id:int):
+        # コマンドの実行者がいるボイスチャンネルに接続
+        await voiceChannel.connect()
+        # 接続先のチャンネル情報の記録
+        self.text_room_name  = str(textChannel)
+        self.text_room_id    = int(textChannel.id)
+        self.voice_room_name = str(voiceChannel)
+        self.voice_room_id   = int(voiceChannel.id)
+        self.guild_id        = guild_id
+        # statusの更新
+        self.game = discord.Game(self.voice_room_name)
+        await self.bot.change_presence(status=None, activity=self.game)
+        # 接続に成功したことの報告
+        print(self.voice_room_name + "に接続しました")
+    
+    async def execute_leave(self, protocol:discord.VoiceProtocol):
+        # ボイスチャンネルから切断
+        await protocol.disconnect()
+        # 切断に成功したことの報告
+        print(self.voice_room_name + "から切断しました")
+        # チャンネル情報の初期化
+        self.text_room_name  = ''
+        self.text_room_id    = 0
+        self.voice_room_name = ''
+        self.voice_room_id   = 0
+        self.guild_id        = 0
+        # statusの初期化
+        self.game = discord.Game("待機中")
+        await self.bot.change_presence(status=None, activity=self.game)
+    
+    async def execute_help(self) -> str:
+        return help_message
+    
+    async def execute_hello(self) -> str:
+        return version_info
+    
+    async def execute_chg_my_voice(self, author_id:int, speaker_name:str, style_name:str) -> str:
+        # generatorsを前から順番に探す
+        for generator in self.generators.values():
+            if generator.hasStyle(speaker_name, style_name):
+                self.voice_dict[author_id] = [generator.getName(), speaker_name, style_name]
+                self.writeVoiceDict()
+                return comment_dict['message_chg_voice']
+        return comment_dict['message_not_actualized'] + "\n" + comment_dict['message_prompt_command']
+    
+    async def execute_chg_my_voice_with_software(self, author_id:int, speaker_name:str, style_name:str, generator_name:str = '') -> str:
+        # ソフト名を指定して対応するボイスを探す
+        if generator_name in self.generators.keys():
+            generator = self.generators[generator_name]
+            if generator.hasStyle(speaker_name, style_name):
+                self.voice_dict[author_id] = [generator.getName(), speaker_name, style_name]
+                self.writeVoiceDict()
+                return comment_dict['message_chg_voice']
+            else:
+                return comment_dict['message_not_actualized_in_software'] + "\n" + comment_dict['message_prompt_command']
+        else:
+            return comment_dict['message_invalid_software'] + "\n" + comment_dict['message_prompt_command']
+    
+    async def execute_wlist_add(self, word:str, how_to_read:str) -> str:
+        if word and how_to_read:
+            self.word_dict[word] = how_to_read
+            revise_dict(self.word_dict, self.wlist_file)
+            return comment_Synthax + word + "を" + how_to_read + "として追加しました"
+        else:
+            return comment_Synthax + "単語か読み仮名のどちらかが指定されていません"
+    
+    async def execute_wlist_delete(self, word:str) -> str:
+        if word and word in self.word_dict.keys():
+            self.word_dict.pop(word)
+            revise_dict(self.word_dict, self.wlist_file)
+            return comment_Synthax + word + "を削除しました"
+        elif word:
+            return comment_Synthax + word + "は読み仮名が指定されていません"
+        else:
+            return comment_Synthax + "単語が指定されていません"
+    
+    async def execute_wlist_show(self) -> discord.File:
+        return discord.File(self.wlist_file)
+    
+    async def execute_chg_voice_setting(self, speaker_name:str, style_name:str, parameter_name:str, value:str) -> str:
+        # 引数のどれかが空かNoneの場合エラー
+        if not speaker_name or not style_name or not parameter_name or not value:
+            return comment_Synthax + command_chg_voice_setting + " 話者名 スタイル名 変更するパラメータ 変更後の値 と入力してください\n" +\
+                   comment_Synthax + "変更するパラメータには speed, pitch, intonation, volume が指定できます"
+        
+        # スタイル情報辞書に話者とスタイルの組み合わせが存在しない場合エラー
+        if not (speaker_name, style_name) in self.style_setting_dict.keys():
+            return comment_Synthax + "指定された話者とスタイルの組み合わせが存在しません"
+
+        # 各種状態の変更
+        try:
+            value_tmp = '{:3}'.format(value)
+            if parameter_name.lower() == 'speed':
+                if float(value_tmp) < 0.5 or 2.0 < float(value_tmp):
+                    return comment_Synthax + 'speedは0.5から2.0の範囲で指定してください'
+                else:
+                    self.style_setting_dict[(speaker_name, style_name)]['speed'] = float(value_tmp)
+                    self.writeStyleSettingDict()
+                    return comment_Synthax + speaker_name + " " + style_name + "の読み上げスピードを" + value + 'に設定しました'
+            elif parameter_name.lower() == 'pitch':
+                if float(value_tmp) < -0.15 or 0.15 < float(value_tmp):
+                    return comment_Synthax + 'pitchは-0.15から0.15の範囲で指定してください'
+                else:
+                    self.style_setting_dict[(speaker_name, style_name)]['pitch'] = float(value_tmp)
+                    self.writeStyleSettingDict()
+                    return comment_Synthax + speaker_name + " " + style_name + "の音高を" + value + 'に設定しました'
+            elif parameter_name.lower() == 'intonation':
+                if float(value_tmp) < 0.0 or 2.0 < float(value_tmp):
+                    return comment_Synthax + 'intonationは0.0から2.0の範囲で指定してください'
+                else:
+                    self.style_setting_dict[(speaker_name, style_name)]['intonation'] = float(value_tmp)
+                    self.writeStyleSettingDict()
+                    return comment_Synthax + speaker_name + " " + style_name + "の抑揚を" + value + 'に設定しました'
+            elif parameter_name.lower() == 'volume':
+                if float(value_tmp) < 0.0 or 2.0 < float(value_tmp):
+                    return comment_Synthax + 'volumeは0.0から2.0の範囲で指定してください'
+                else:
+                    self.style_setting_dict[(speaker_name, style_name)]['volume'] = float(value_tmp)
+                    self.writeStyleSettingDict()
+                    return comment_Synthax + speaker_name + " " + style_name + "の音量を" + value + 'に設定しました'
+            else:
+                return comment_Synthax + "変更するパラメータには speed, pitch, intonation, volume を指定してください"
+
+        except ValueError:
+            return comment_dict['message_err']
+    
+    async def execute_show_speakers(self) -> str:
+        sentence = '```'
+        for generator in self.generators.values():
+            sentence += generator.getSpeakersStr()
+        sentence += '```'
+        return sentence

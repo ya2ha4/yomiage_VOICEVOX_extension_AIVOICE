@@ -1,6 +1,7 @@
 # パッケージのインストール
 from asyncio.windows_events import NULL
 import discord
+from discord import app_commands
 from discord.ext import tasks, commands
 import csv
 import sys
@@ -15,9 +16,64 @@ intents.typing = False  # typingは切る
 bot = commands.Bot(command_prefix="$", intents=intents)
 tree = bot.tree
 
+# スラッシュコマンドの設定
+group = app_commands.Group(name=slash_Synthax, description='VoiceBot用のコマンドです')
+
 # チャンネル情報保存用
 room_info_tmp = room_information()
 
+@group.command(description='VOICEVOX BOTを現在入室しているボイスチャットに入室させます')
+async def join(interaction:discord.Interaction) -> None:
+    await room_info_tmp.execute_join(interaction.user.voice.channel, interaction.channel, int(interaction.guild.id))
+    await interaction.response.send_message(comment_dict['message_join'])
+
+@group.command(description='VOICEVOX BOTを退室させます')
+async def leave(interaction:discord.Interaction) -> None:
+    await room_info_tmp.execute_leave(interaction.guild.voice_client)
+    await interaction.response.send_message(comment_dict['message_leave'])
+
+@group.command(description='コマンドの一覧を表示します')
+async def help(interaction:discord.Interaction) -> None:
+    await interaction.response.send_message(await room_info_tmp.execute_help())
+
+@group.command(description='botのバージョン情報を表示します。動作確認用')
+async def hello(interaction:discord.Interaction) -> None:
+    await interaction.response.send_message(await room_info_tmp.execute_hello())
+
+@group.command(description='コマンドの実行者のテキストチャットを読み上げる際のボイススタイルを変更します')
+@app_commands.describe(name='話者名(四国めたん、ずんだもん、etc)', style='スタイル名(ノーマル、あまあま、セクシー、つんつん、etc)')
+async def chg_my_voice(interaction:discord.Interaction, name:str, style:str):
+    await interaction.response.send_message(await room_info_tmp.execute_chg_my_voice(interaction.user.id, name, style))
+
+@group.command(description='ソフトウェアを指定して、コマンドの実行者のテキストチャットを読み上げる際のボイススタイルを変更します')
+@app_commands.describe(name='話者名(四国めたん、ずんだもん、etc)', style='スタイル名(ノーマル、あまあま、セクシー、つんつん、etc)', software='ソフトウェア名(VOICEVOX、COEIROINK、etc)')
+async def chg_my_voice_with_software(interaction:discord.Interaction, name:str, style:str, software:str):
+    await interaction.response.send_message(await room_info_tmp.execute_chg_my_voice_with_software(interaction.user.id, name, style, software))
+
+@group.command(description='特定の単語に読み仮名を指定します')
+@app_commands.describe(word='単語', how_to_read='読み仮名')
+async def wlist_add(interaction:discord.Interaction, word:str, how_to_read:str):
+    await interaction.response.send_message(await room_info_tmp.execute_wlist_add(word, how_to_read))
+
+@group.command(description='特定の単語に指定された読み仮名を削除します')
+@app_commands.describe(word='単語')
+async def wlist_delete(interaction:discord.Interaction, word:str):
+    await interaction.response.send_message(await room_info_tmp.execute_wlist_delete(word))
+
+@group.command(description='単語に設定された読み仮名の一覧をCSVファイルとして返します')
+async def wlist_show(interaction:discord.Interaction):
+    await interaction.response.send_message(file=await room_info_tmp.execute_wlist_show())
+
+@group.command(description='ボイススタイル毎のパラメータを変更します')
+@app_commands.describe(name='話者名', style='スタイル名', parameter='パラメータ名(speed,pitch,intonation,volumeのいずれか)', value='変更後の値(speedは0.5～2.0,pitchは-0.15～0.15),intonationとvolumeは0.0～2.0')
+async def chg_voice_setting(interaction:discord.Interaction, name:str, style:str, parameter:str, value:str):
+    await interaction.response.send_message(await room_info_tmp.execute_chg_voice_setting(name, style, parameter, value))
+
+@group.command(description='使用可能なボイススタイルの一覧を表示します')
+async def show_speakers(interaction:discord.Interaction):
+    await interaction.response.send_message(await room_info_tmp.execute_show_speakers())
+
+tree.add_command(group)
 
 # 起動時の処理
 @bot.event
@@ -31,6 +87,9 @@ async def on_ready():
     # 各種情報の読み込み
     await room_info_tmp.reload()
     
+    # スラッシュコマンドの準備
+    await tree.sync()
+
     # statusの初期化
     room_info_tmp.game = discord.Game("待機中")
     if room_info_tmp.flag_valid_dict[command_inform_tmp_room]:

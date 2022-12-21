@@ -22,6 +22,8 @@ with open(Synthax_file, 'r', encoding='utf-8') as f:
                   comment_Synthax = row[1]
             elif row[0] == 'other_bots_Synthax':
                   other_bots_Synthax.append(row[1])
+            elif row[0] == 'slash_Synthax':
+                  slash_Synthax = row[1]
 
 # VOICEVOX音声再生（.bat）ファイルへのパス
 bat_json = "output_json_from_VOICEVOX.bat"   
