@@ -1,8 +1,16 @@
-# yomiage_VOICEVOX(verT-20220924)
+# yomiage_VOICEVOX_extension_AIVOICE
 
 by かみみや
 
 forked by タクト
+
+forked by ya2ha4
+
+## About extension_AIVOICE
+本リポジトリは https://github.com/TaktstockJp/yomiage_VOICEVOX_verT を元に、「とりあえず」 A.I.VOICE でもDiscordのチャットを読み上げられるよう対応したものになります。
+
+セットアップに必要なPythonパッケージ、
+yomiage_VOICEVOX_verT との差分は [readme_extension_AIVOICE.md] をご参照下さい。</br>
 
 ## 概要
 
@@ -72,17 +80,25 @@ python読める＆python実行できる人向けです。
 2. ffmpegのインストール
    [このサイト](https://jp.videoproc.com/edit-convert/how-to-download-and-install-ffmpeg.htm)の"**1. WindowsでFFmpegをダウンロード＆インストールする方法（Windows10対応）**"を参考にしてください。
 
-3. pycord.py, PyNaClのインストール
+3. pythonパッケージのインストール
    コマンドプロンプト(Win+Rで"ファイル名を指定して実行"をひらいて"cmd"を打ち込んだら出てくると思います）上で以下のコマンドを打ち込んで実行してください。
 
    ```bash
-   $ pip install git+https://github.com/Rapptz/discord.py
+   $ pip install discord.py[voice]
    $ pip install PyNaCl
+   $ pip install pythonnet
    ```
-   
+
+   ※Pipfile を用意しているのでpipenvインストールされている方は以下のコマンドを実行してパッケージインストールすることができます。
+   ```
+   $ pipenv install
+   ```
+
 4. VOICEVOXのインストール
    [このサイト](https://voicevox.hiroshiba.jp/)から最新版をダウンロードしてください。
 
+5. A.I.VOICEのインストール
+   A.I.VOICE Editor (Ver1.3.0以降)をインストールしてください。
 
 ## 起動方法
 
@@ -114,7 +130,7 @@ python読める＆python実行できる人向けです。
    cd ディレクトリ名で移動できます。（https://eng-entrance.com/windows-command-cd を参照）例えば以下のようにする。
 
    ```bash
-   $ cd C:\discord_bot\yomiage_VOICEVOX
+   $ cd C:\discord_bot\yomiage_VOICEVOX_extension_AIVOICE
    ```
 
 8. コマンドプロンプトに以下を打ち込み、実行します。
@@ -182,7 +198,7 @@ $ pyinstaller for_developer/discordbot.spec
 ## その他
 
 1. ほかのBOTとコマンドが被ってしまっている場合はSynthax_setting.csvの"!", ">", "voice-bot1"を適当に変更してください。
-2. このBOTは改変版です。バグ報告や機能要望等は[改変者のTwitter](https://twitter.com/Taktstock_mov)にお願いします。
+2. このBOTは改変版です。一夜の勢いで作業して作ったのでバグ報告や機能要望等は対応予定は無いです。
 
 
 ## 利用規約的なやつ
@@ -200,6 +216,7 @@ $ pyinstaller for_developer/discordbot.spec
    [LMROID HP](https://lmroidsoftware.wixsite.com/nhoshio) <br>
    [SHAREVOX HP](https://www.sharevox.app/) <br>
    [ITVOICE HP](https://booth.pm/ja/items/4374126) <br>
+   [A.I.VOICE HP](https://aivoice.jp/)<br>
    [東北ずん子利用の手引き](https://zunko.jp/guideline.html)<br>
    
 4. 本ソフトウェアにより生じた損害・不利益について、製作者は一切の責任を負いません。
@@ -207,7 +224,7 @@ $ pyinstaller for_developer/discordbot.spec
 5. 改善して欲しい点などあれば言ってください。
    ある程度リクエストは受け付けたいと思っていますが、製作者に技術がないのであまり期待しないでください。
 
-6. 何かあれば[改変者のTwitter](https://twitter.com/Taktstock_mov)まで<br>
+6. 何かあれば****まで<br>
 
 ## 更新履歴
 
@@ -381,3 +398,7 @@ $ pyinstaller for_developer/discordbot.spec
   ロールに対するメンションが正しく読み上げられない不具合を修正
 
   ユーザーIDに紐づいているボイススタイルが利用できない時、直前に生成したwavファイルが再生されてしまう不具合を修正し、デフォルトスタイルで読み上げるように変更
+
+- 20230514
+
+  A.I.VOICEでとりあえず再生できるよう対応（暫定処理都合、VOICEVOX版と互換がとれていない。プリセットの設定などを手動で対応する必要あり）
