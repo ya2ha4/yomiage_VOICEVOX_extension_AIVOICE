@@ -11,7 +11,7 @@ import sys
 import traceback
 import configparser
 from for_developer.discordbot_setting import *
-from for_developer.voice_generator import VoiceVoxVoiceGenerator
+from for_developer.voice_generator import VoiceVoxVoiceGenerator, AiVoiceVoiceGenerator
 
 # 関数の定義
 # 以下、引数のmessage_tmpはdiscord.message型を入れる。
@@ -112,28 +112,19 @@ class room_information():
 
     # sentenceで得たメッセージをVOICEVOXで音声ファイルに変換しそれを再生する
     def play_voice(self, sentence, message_tmp):
-        # チャットの内容をutf-8でエンコードする
-        text = sentence.encode('utf-8')
-
-        # HTTP POSTで投げられるように形式を変える
-        arg = ''
-        for item in text:
-            arg += '%'
-            arg += hex(item)[2:].upper()
-
         # batファイルを呼び起こしてwavファイルを作成する
         try:
             if message_tmp.author.id in self.voice_dict.keys():
                 voice_data = self.voice_dict.get(message_tmp.author.id)
                 parameter_dict = self.style_setting_dict[(voice_data[1], voice_data[2])]
-                self.generators[voice_data[0]].generate(voice_data[1], voice_data[2], arg, parameter_dict)
+                self.generators[voice_data[0]].generate(voice_data[1], voice_data[2], sentence, parameter_dict)
             else:
                 parameter_dict = self.style_setting_dict[(self.default_speaker, self.default_style)]
-                self.generators[self.default_generator].generate(self.default_speaker, self.default_style, arg, parameter_dict)
+                self.generators[self.default_generator].generate(self.default_speaker, self.default_style, sentence, parameter_dict)
         except KeyError:
             # ユーザーが指定しているスタイルが辞書に存在しない場合
             parameter_dict = self.style_setting_dict[(self.default_speaker, self.default_style)]
-            self.generators[self.default_generator].generate(self.default_speaker, self.default_style, arg, parameter_dict)
+            self.generators[self.default_generator].generate(self.default_speaker, self.default_style, sentence, parameter_dict)
         except Exception as e:
             print(type(e))
             traceback.print_exc()
@@ -216,8 +207,11 @@ class room_information():
         for k in ini['Using Setting']:
             print(k)
             print(ini.get('Using Setting', k))
-            self.createVoiceVoxGenerator(k, ini.get('Using Setting', k))
-        
+            if k == "VOICEVOX":
+                self.createVoiceVoxGenerator(k, ini.get('Using Setting', k))
+            if k == "AIVOICE":
+                self.createAiVoiceGenerator(k, ini.get('Using Setting', k))
+
         if not any(self.generators):
             print("音声合成ソフトウェアの初期化に失敗しました。プログラムを終了します。")
             sys.exit(1)
@@ -307,6 +301,18 @@ class room_information():
         try:
             tmpVVGenerator = VoiceVoxVoiceGenerator(name, port)
             self.generators[name] = tmpVVGenerator
+        except Exception as e:
+            print(name + "の初期化に失敗しました。")
+            print(name + "が起動されていない可能性があります。")
+            print(type(e))
+            traceback.print_exc()
+
+    # A.I.VOICEとその派生ソフトウェアのオブジェクトを作成して返す
+    # エラー時にgeneratorsにオブジェクトを格納させないためのコンストラクタのラッパ
+    def createAiVoiceGenerator(self, name:str, port:str):
+        try:
+            tmpAiVGenerator = AiVoiceVoiceGenerator(name, port)
+            self.generators[name] = tmpAiVGenerator
         except Exception as e:
             print(name + "の初期化に失敗しました。")
             print(name + "が起動されていない可能性があります。")

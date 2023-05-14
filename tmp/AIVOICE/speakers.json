@@ -1,0 +1,14 @@
+[
+  {
+    "name":"結月ゆかり",
+    "speaker_uuid":"",
+    "styles":[{"id":0,"name":"ノーマル"},{"id":1,"name":"雫"}],
+    "version":"0.0.0"
+  },
+  {
+    "name":"紲星あかり",
+    "speaker_uuid":"",
+    "styles":[{"id":0,"name":"ノーマル"},{"id":1,"name":"蕾"}],
+    "version":"0.0.0"
+  }
+]
